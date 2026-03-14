@@ -108,3 +108,16 @@ function rotateFurniture() {
     // Apply CSS rotation
     furnitureBox.style.transform = `rotate(${rotation}deg)`;
 }
+function resetRoom() {
+
+    const furnitureBox = document.getElementById("furnitureBox");
+    const fitResult = document.getElementById("fitResult");
+
+    // hide furniture
+    furnitureBox.style.width = "0px";
+    furnitureBox.style.height = "0px";
+
+    // clear result text
+    fitResult.innerText = "";
+
+}
