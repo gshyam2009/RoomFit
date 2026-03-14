@@ -48,16 +48,18 @@ background:#43a047;
 
 /* Room preview */
 
-#roomBox{
-position:relative;
-border:3px solid #333;
-background:#f0f3f7;
-border-radius:8px;
-box-shadow:0 6px 15px rgba(0,0,0,0.15);
-background-image:
-linear-gradient(to right, rgba(0,0,0,0.08) 1px, transparent 1px),
-linear-gradient(to bottom, rgba(0,0,0,0.08) 1px, transparent 1px);
-background-size:40px 40px;
+#roomBox {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    border: 3px solid black;
+    background-color: white;
+
+    background-image:
+        linear-gradient(to right, #e5e5e5 1px, transparent 1px),
+        linear-gradient(to bottom, #e5e5e5 1px, transparent 1px);
+
+    background-size: 40px 40px;
 }
 
 #furnitureBox{
