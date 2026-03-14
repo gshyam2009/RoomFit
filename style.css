@@ -64,6 +64,11 @@ background:#43a047;
         0 8px 20px rgba(0,0,0,0.2);
 
     margin-top: 10px;
+    background-image: 
+    linear-gradient(#ddd 1px, transparent 1px),
+    linear-gradient(90deg, #ddd 1px, transparent 1px);
+
+background-size: 40px 40px;
 }
 #furnitureBox{
 position:absolute;
