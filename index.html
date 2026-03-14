@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>RoomFit</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <h1>RoomFit</h1>
+
+    <h3>Room Dimensions</h3>
+    <input type="number" id="roomWidth" placeholder="Room Width (cm)">
+    <br>
+    <input type="number" id="roomLength" placeholder="Room Length (cm)">
+    <br><br>
+
+    <h3>Furniture</h3>
+    <input type="text" id="furnitureName" placeholder="Furniture Name (e.g. Sofa)">
+    <br>
+    <input type="number" id="furnWidth" placeholder="Furniture Width (cm)">
+    <br>
+    <input type="number" id="furnLength" placeholder="Furniture Length (cm)">
+    <br><br>
+
+    <button onclick="checkFit()">Check Fit</button>
+    <button onclick="rotateFurniture()">Rotate 90°</button>
+    <!-- Result message -->
+    <div id="fitResult" style="margin-top:15px; font-weight:600; font-size:16px;"></div>
+    <br><br>
+
+    <!-- Room Preview Section -->
+    <h3>Room Preview</h3>
+
+<div id="roomContainer" style="position:relative; display:inline-block;">
+    
+    <!-- Width label (top, above room) -->
+    <div id="roomWidthLabel" style="text-align:center; margin-bottom:5px; font-weight:600;"></div>
+    
+    <div style="display:flex;">
+        <!-- Length label (left side of room) -->
+        <div id="roomLengthLabel" style="writing-mode: vertical-rl; transform: rotate(180deg); font-weight:600; margin-right:5px;"></div>
+        
+        <!-- Room box -->
+        <div id="roomBox">
+            <div id="furnitureBox">
+                <span id="furnitureLabel">Furniture</span>
+            </div>
+        </div>
+    </div>
+    
+</div>
+    <div id="roomLengthLabel"></div> <!-- Length label at bottom -->
+
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,78 @@
+body{
+font-family:'Poppins',sans-serif;
+background:#f5f7fa;
+text-align:center;
+margin:0;
+}
+
+/* RoomFit title */
+
+h1{
+color:white;
+background:linear-gradient(90deg,#4CAF50,#2e7d32);
+padding:15px;
+border-radius:10px;
+width:300px;
+margin:25px auto;
+letter-spacing:2px;
+box-shadow:0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Inputs */
+
+input{
+padding:10px;
+margin:6px;
+width:220px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:14px;
+}
+
+/* Button */
+
+button{
+padding:10px 18px;
+background:#4CAF50;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+margin-top:10px;
+}
+
+button:hover{
+background:#43a047;
+}
+
+/* Room preview */
+
+#roomBox{
+position:relative;
+border:3px solid #333;
+background:#f0f3f7;
+border-radius:8px;
+box-shadow:0 6px 15px rgba(0,0,0,0.15);
+background-image:
+linear-gradient(to right, rgba(0,0,0,0.08) 1px, transparent 1px),
+linear-gradient(to bottom, rgba(0,0,0,0.08) 1px, transparent 1px);
+background-size:40px 40px;
+}
+
+#furnitureBox{
+position:absolute;
+background:#4CAF50;
+display:flex;
+align-items:center;
+justify-content:center;
+color:white;
+font-weight:600;
+cursor:grab;
+border-radius:6px;
+box-shadow:0 3px 8px rgba(0,0,0,0.25);
+}
+
+#furnitureLabel{
+pointer-events:none;
+}
