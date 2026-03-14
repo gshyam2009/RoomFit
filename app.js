@@ -119,5 +119,6 @@ function resetRoom() {
 
     // clear result text
     fitResult.innerText = "";
+    document.getElementById("furnitureLabel").innerText = "";
 
 }
