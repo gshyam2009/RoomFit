@@ -55,6 +55,7 @@ background:#43a047;
     height: 400px;
 
     border: 6px solid #444;   /* walls */
+    border-radius: 12px;
 
     background-color: #f5f5f5; /* floor color */
 
