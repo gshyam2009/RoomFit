@@ -1,61 +1,526 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>RoomFit</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RoomFit</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2e2e2e;
+      --accent: #c8f55a;
+      --accent-dim: #9abe3a;
+      --text: #f0f0f0;
+      --muted: #888;
+      --fit-yes: #c8f55a;
+      --fit-no: #ff5f5f;
+      --room-bg: #141414;
+      --furniture-color: #c8f55a;
+      --grid: #222;
+    }
+ 
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 24px 80px;
+    }
+ 
+    /* ── HEADER ── */
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--accent);
+      line-height: 1;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+ 
+    /* ── LAYOUT ── */
+    .app {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: start;
+    }
+ 
+    @media (max-width: 750px) {
+      .app { grid-template-columns: 1fr; }
+    }
+ 
+    /* ── PANEL ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+ 
+    .section-label {
+      font-size: 0.68rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+ 
+    .field {
+      margin-bottom: 12px;
+    }
+    .field label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 5px;
+      letter-spacing: 1px;
+    }
+    .field input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: var(--accent);
+    }
+    .field input::placeholder { color: #444; }
+ 
+    /* ── BUTTONS ── */
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    button {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #0f0f0f;
+      font-weight: 500;
+      flex: 1;
+    }
+    .btn-primary:hover { background: var(--accent-dim); }
+ 
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+ 
+    /* ── RESULT BADGE ── */
+    #fitResult {
+      margin-top: 18px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      letter-spacing: 1px;
+      text-align: center;
+      display: none;
+    }
+    #fitResult.fits {
+      background: rgba(200,245,90,0.1);
+      border: 1px solid var(--fit-yes);
+      color: var(--fit-yes);
+      display: block;
+    }
+    #fitResult.nope {
+      background: rgba(255,95,95,0.1);
+      border: 1px solid var(--fit-no);
+      color: var(--fit-no);
+      display: block;
+    }
+ 
+    /* ── ROOM PREVIEW ── */
+    .preview-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+ 
+    .room-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+ 
+    #widthLabel {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+ 
+    .room-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+ 
+    #lengthLabel {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+ 
+    #roomBox {
+      position: relative;
+      width: 420px;
+      height: 420px;
+      border: 3px solid #444;
+      border-radius: 4px;
+      background-color: var(--room-bg);
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 42px 42px;
+      overflow: hidden;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+      flex-shrink: 0;
+    }
+ 
+    /* corner ticks */
+    #roomBox::before, #roomBox::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-color: var(--accent);
+      border-style: solid;
+      opacity: 0.4;
+    }
+    #roomBox::before { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
+    #roomBox::after  { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
+ 
+    #furnitureBox {
+      position: absolute;
+      left: 0; top: 0;
+      background: rgba(200,245,90,0.18);
+      border: 2px solid var(--accent);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      user-select: none;
+      transition: background 0.15s;
+      min-width: 20px;
+      min-height: 20px;
+    }
+    #furnitureBox:active { cursor: grabbing; background: rgba(200,245,90,0.28); }
+ 
+    #furnitureLabel {
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+      pointer-events: none;
+      text-align: center;
+      padding: 2px 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+ 
+    .hint {
+      font-size: 0.68rem;
+      color: #444;
+      text-align: center;
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+ 
+    /* separator in panel */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  </style>
 </head>
-
 <body>
-
-    <h1 class="title">RoomFit</h1>
-    
-    <h3>Room Dimensions</h3>
-    <input type="number" id="roomWidth" placeholder="Room Width (cm)">
-    <br>
-    <input type="number" id="roomLength" placeholder="Room Length (cm)">
-    <br><br>
-
-    <h3>Furniture</h3>
-    <input type="text" id="furnitureName" placeholder="Furniture Name (e.g. Sofa)">
-    <br>
-    <input type="number" id="furnWidth" placeholder="Furniture Width (cm)">
-    <br>
-    <input type="number" id="furnLength" placeholder="Furniture Length (cm)">
-    <br><br>
-
-    <button onclick="checkFit()">Check Fit</button>
-    <button onclick="rotateFurniture()">Rotate 90°</button>
-    <button onclick="resetRoom()">Reset Room</button>
-    <!-- Result message -->
-    <div id="fitResult" style="margin-top:15px; font-weight:600; font-size:16px;"></div>
-    <br><br>
-
-    <!-- Room Preview Section -->
-    <h3>Room Preview</h3>
-
-<div id="roomContainer" style="position:relative; display:inline-block;">
-    
-    <!-- Width label (top, above room) -->
-    <div id="roomWidthLabel" style="text-align:center; margin-bottom:5px; font-weight:600;"></div>
-    
-    <div style="display:flex;">
-        <!-- Length label (left side of room) -->
-        <div id="roomLengthLabel" style="writing-mode: vertical-rl; transform: rotate(180deg); font-weight:600; margin-right:5px;"></div>
-        
-        <!-- Room box -->
-        <div id="roomBox">
-            <div id="furnitureBox">
-                <span id="furnitureLabel">Furniture</span>
-            </div>
-        </div>
+ 
+<header>
+  <h1>ROOMFIT</h1>
+  <p>Does it actually fit?</p>
+</header>
+ 
+<div class="app">
+ 
+  <!-- ── LEFT PANEL ── -->
+  <div class="panel">
+ 
+    <div class="section-label">Room</div>
+    <div class="field">
+      <label>Width (cm)</label>
+      <input type="number" id="roomWidth" placeholder="e.g. 400" min="1">
     </div>
-    
+    <div class="field">
+      <label>Length (cm)</label>
+      <input type="number" id="roomLength" placeholder="e.g. 300" min="1">
+    </div>
+ 
+    <hr class="divider">
+ 
+    <div class="section-label">Furniture</div>
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="furnitureName" placeholder="e.g. Sofa">
+    </div>
+    <div class="field">
+      <label>Width (cm)</label>
+      <input type="number" id="furnWidth" placeholder="e.g. 180" min="1">
+    </div>
+    <div class="field">
+      <label>Length (cm)</label>
+      <input type="number" id="furnLength" placeholder="e.g. 90" min="1">
+    </div>
+ 
+    <div class="btn-row">
+      <button class="btn-primary" onclick="checkFit()">Check Fit</button>
+      <button class="btn-secondary" onclick="rotateFurniture()">↻ Rotate</button>
+      <button class="btn-secondary" onclick="resetAll()">Reset</button>
+    </div>
+ 
+    <div id="fitResult"></div>
+ 
+  </div>
+ 
+  <!-- ── RIGHT PANEL ── -->
+  <div class="preview-panel">
+    <div class="section-label">Room Preview</div>
+ 
+    <div class="room-wrap">
+      <div id="widthLabel">— cm</div>
+      <div class="room-row">
+        <div id="lengthLabel">— cm</div>
+        <div id="roomBox">
+          <div id="furnitureBox">
+            <span id="furnitureLabel"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+ 
+    <p class="hint">drag furniture to reposition</p>
+  </div>
+ 
 </div>
-    <div id="roomLengthLabel"></div> <!-- Length label at bottom -->
-
-    <script src="app.js"></script>
+ 
+<script>
+  // ── STATE ──
+  let rotated = false;   // true = furniture is 90° rotated (width/length swapped)
+  let furnW = 0, furnL = 0;  // actual furniture dims (before rotation)
+ 
+  const CANVAS = 420;    // px size of roomBox
+ 
+  // ── DOM refs ──
+  const roomBox       = document.getElementById("roomBox");
+  const furnitureBox  = document.getElementById("furnitureBox");
+  const furnitureLabel= document.getElementById("furnitureLabel");
+  const fitResult     = document.getElementById("fitResult");
+  const widthLabel    = document.getElementById("widthLabel");
+  const lengthLabel   = document.getElementById("lengthLabel");
+ 
+  // ── CHECK FIT ──
+  function checkFit() {
+    const roomW = parseFloat(document.getElementById("roomWidth").value);
+    const roomL = parseFloat(document.getElementById("roomLength").value);
+    furnW        = parseFloat(document.getElementById("furnWidth").value);
+    furnL        = parseFloat(document.getElementById("furnLength").value);
+    const name   = document.getElementById("furnitureName").value.trim() || "Furniture";
+ 
+    if (!roomW || !roomL || !furnW || !furnL) {
+      showResult(null, "Fill in all measurements first.");
+      return;
+    }
+ 
+    // Reset rotation on new check
+    rotated = false;
+ 
+    // Labels
+    widthLabel.textContent  = roomW + " cm";
+    lengthLabel.textContent = roomL + " cm";
+ 
+    // Scale room canvas
+    const scale = CANVAS / Math.max(roomW, roomL);
+    roomBox.style.width  = (roomW * scale) + "px";
+    roomBox.style.height = (roomL * scale) + "px";
+ 
+    // Scale furniture
+    furnitureBox.style.width  = (furnW * scale) + "px";
+    furnitureBox.style.height = (furnL * scale) + "px";
+    furnitureBox.style.left   = "0px";
+    furnitureBox.style.top    = "0px";
+ 
+    furnitureLabel.textContent = name;
+ 
+    // Fit check
+    const fits = furnW <= roomW && furnL <= roomL;
+    showResult(fits, fits
+      ? `✔ ${name} fits  (${furnW}×${furnL} cm into ${roomW}×${roomL} cm)`
+      : `✘ ${name} does not fit  (${furnW}×${furnL} cm > ${roomW}×${roomL} cm)`
+    );
+  }
+ 
+  // ── ROTATE ──
+  function rotateFurniture() {
+    if (!furnW || !furnL) return;
+ 
+    rotated = !rotated;
+ 
+    const roomW = parseFloat(document.getElementById("roomWidth").value)  || 0;
+    const roomL = parseFloat(document.getElementById("roomLength").value) || 0;
+    if (!roomW || !roomL) return;
+ 
+    const scale = CANVAS / Math.max(roomW, roomL);
+ 
+    // Effective dims after rotation
+    const effW = rotated ? furnL : furnW;
+    const effL = rotated ? furnW : furnL;
+ 
+    // Resize box physically (no CSS transform — avoids drag confusion)
+    furnitureBox.style.width  = (effW * scale) + "px";
+    furnitureBox.style.height = (effL * scale) + "px";
+ 
+    // Clamp position so it stays inside room
+    clampFurniture();
+ 
+    // Re-evaluate fit
+    const fits = effW <= roomW && effL <= roomL;
+    const name = furnitureLabel.textContent || "Furniture";
+    showResult(fits, fits
+      ? `✔ ${name} fits  (${effW}×${effL} cm into ${roomW}×${roomL} cm)`
+      : `✘ ${name} does not fit  (${effW}×${effL} cm > ${roomW}×${roomL} cm)`
+    );
+  }
+ 
+  // ── RESET ──
+  function resetAll() {
+    ["roomWidth","roomLength","furnitureName","furnWidth","furnLength"]
+      .forEach(id => document.getElementById(id).value = "");
+ 
+    furnW = furnL = 0;
+    rotated = false;
+ 
+    furnitureBox.style.width  = "0px";
+    furnitureBox.style.height = "0px";
+    furnitureBox.style.left   = "0px";
+    furnitureBox.style.top    = "0px";
+    furnitureLabel.textContent = "";
+ 
+    roomBox.style.width  = CANVAS + "px";
+    roomBox.style.height = CANVAS + "px";
+ 
+    widthLabel.textContent  = "— cm";
+    lengthLabel.textContent = "— cm";
+ 
+    fitResult.textContent = "";
+    fitResult.className   = "";
+  }
+ 
+  // ── HELPERS ──
+  function showResult(fits, msg) {
+    fitResult.textContent = msg;
+    fitResult.className   = fits === true ? "fits" : fits === false ? "nope" : "";
+    if (fits === null) { fitResult.style.display = "block"; fitResult.style.border = "1px solid #555"; fitResult.style.color = "#888"; fitResult.style.background = "transparent"; }
+    else { fitResult.style.cssText = ""; }
+  }
+ 
+  function clampFurniture() {
+    const maxX = roomBox.clientWidth  - furnitureBox.clientWidth;
+    const maxY = roomBox.clientHeight - furnitureBox.clientHeight;
+    let x = parseFloat(furnitureBox.style.left) || 0;
+    let y = parseFloat(furnitureBox.style.top)  || 0;
+    furnitureBox.style.left = Math.min(Math.max(x, 0), Math.max(maxX, 0)) + "px";
+    furnitureBox.style.top  = Math.min(Math.max(y, 0), Math.max(maxY, 0)) + "px";
+  }
+ 
+  // ── DRAG ──
+  let isDragging = false, dragOffX = 0, dragOffY = 0;
+ 
+  furnitureBox.addEventListener("mousedown", e => {
+    isDragging = true;
+    dragOffX = e.clientX - furnitureBox.offsetLeft;
+    dragOffY = e.clientY - furnitureBox.offsetTop;
+    e.preventDefault();
+  });
+ 
+  document.addEventListener("mousemove", e => {
+    if (!isDragging) return;
+    let nx = e.clientX - dragOffX;
+    let ny = e.clientY - dragOffY;
+    const maxX = roomBox.clientWidth  - furnitureBox.clientWidth;
+    const maxY = roomBox.clientHeight - furnitureBox.clientHeight;
+    furnitureBox.style.left = Math.min(Math.max(nx, 0), Math.max(maxX, 0)) + "px";
+    furnitureBox.style.top  = Math.min(Math.max(ny, 0), Math.max(maxY, 0)) + "px";
+  });
+ 
+  document.addEventListener("mouseup", () => { isDragging = false; });
+ 
+  // Touch support
+  furnitureBox.addEventListener("touchstart", e => {
+    isDragging = true;
+    const t = e.touches[0];
+    dragOffX = t.clientX - furnitureBox.offsetLeft;
+    dragOffY = t.clientY - furnitureBox.offsetTop;
+  }, { passive: true });
+ 
+  document.addEventListener("touchmove", e => {
+    if (!isDragging) return;
+    const t = e.touches[0];
+    let nx = t.clientX - dragOffX;
+    let ny = t.clientY - dragOffY;
+    const maxX = roomBox.clientWidth  - furnitureBox.clientWidth;
+    const maxY = roomBox.clientHeight - furnitureBox.clientHeight;
+    furnitureBox.style.left = Math.min(Math.max(nx, 0), Math.max(maxX, 0)) + "px";
+    furnitureBox.style.top  = Math.min(Math.max(ny, 0), Math.max(maxY, 0)) + "px";
+  }, { passive: true });
+ 
+  document.addEventListener("touchend", () => { isDragging = false; });
+</script>
 </body>
-
 </html>
