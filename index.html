@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
     :root {
       --bg: #0f0f0f;
       --surface: #1a1a1a;
@@ -19,19 +19,63 @@
       --fit-yes: #c8f55a;
       --fit-no: #ff5f5f;
       --room-bg: #141414;
-      --furniture-color: #c8f55a;
       --grid: #222;
     }
- 
+
+    body.light {
+      --bg: #f5f5f0;
+      --surface: #ffffff;
+      --border: #ddd;
+      --accent: #4a7c10;
+      --accent-dim: #3a6008;
+      --text: #111;
+      --muted: #777;
+      --fit-yes: #4a7c10;
+      --fit-no: #cc2222;
+      --room-bg: #e8e8e0;
+      --grid: #d0d0c8;
+    }
+
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
     body {
       font-family: 'DM Mono', monospace;
-      background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       padding: 40px 24px 80px;
+
+      /* dark shifting gradient */
+      background: linear-gradient(-45deg, #1a2a0f, #0f1a2a, #1a0f2a, #2a1a0f, #0f2a1a, #1a1a2a);
+      background-size: 400% 400%;
+      animation: gradientShift 18s ease infinite;
+
+      transition:
+        color 0.6s ease,
+        border-color 0.6s ease;
     }
- 
-    /* ── HEADER ── */
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition:
+        background-color 0.6s ease,
+        background 0.6s ease,
+        border-color 0.6s ease,
+        color 0.6s ease,
+        box-shadow 0.6s ease;
+    }
+
+    body.light {
+      background: linear-gradient(-45deg, #d6f0b8, #b8d6f0, #f0b8d6, #b8f0d6, #d6b8f0, #f0d6b8);
+      background-size: 400% 400%;
+      animation: gradientShift 18s ease infinite;
+    }
+
     header {
       text-align: center;
       margin-bottom: 48px;
@@ -51,29 +95,36 @@
       letter-spacing: 2px;
       text-transform: uppercase;
     }
- 
-    /* ── LAYOUT ── */
+
     .app {
       display: grid;
       grid-template-columns: 320px 1fr;
       gap: 24px;
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       align-items: start;
+      /* both columns stretch to the same height */
+      align-items: stretch;
     }
- 
-    @media (max-width: 750px) {
-      .app { grid-template-columns: 1fr; }
-    }
- 
-    /* ── PANEL ── */
+
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 24px;
+      /* stick to viewport, scroll internally */
+      position: sticky;
+      top: 24px;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
     }
- 
+    .panel::-webkit-scrollbar { width: 4px; }
+    .panel::-webkit-scrollbar-track { background: transparent; }
+    .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
     .section-label {
       font-size: 0.68rem;
       letter-spacing: 3px;
@@ -90,10 +141,8 @@
       height: 1px;
       background: var(--border);
     }
- 
-    .field {
-      margin-bottom: 12px;
-    }
+
+    .field { margin-bottom: 12px; }
     .field label {
       display: block;
       font-size: 0.72rem;
@@ -113,12 +162,9 @@
       transition: border-color 0.2s;
       outline: none;
     }
-    .field input:focus {
-      border-color: var(--accent);
-    }
+    .field input:focus { border-color: var(--accent); }
     .field input::placeholder { color: #444; }
- 
-    /* ── BUTTONS ── */
+
     .btn-row {
       display: flex;
       gap: 8px;
@@ -143,45 +189,163 @@
       flex: 1;
     }
     .btn-primary:hover { background: var(--accent-dim); }
- 
     .btn-secondary {
       background: transparent;
       color: var(--muted);
       border: 1px solid var(--border);
     }
     .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
- 
-    /* ── RESULT BADGE ── */
-    #fitResult {
-      margin-top: 18px;
-      padding: 12px 14px;
-      border-radius: 8px;
-      font-size: 0.82rem;
-      letter-spacing: 1px;
-      text-align: center;
-      display: none;
-    }
-    #fitResult.fits {
-      background: rgba(200,245,90,0.1);
-      border: 1px solid var(--fit-yes);
-      color: var(--fit-yes);
-      display: block;
-    }
-    #fitResult.nope {
-      background: rgba(255,95,95,0.1);
-      border: 1px solid var(--fit-no);
+    .btn-danger {
+      background: transparent;
       color: var(--fit-no);
-      display: block;
+      border: 1px solid var(--fit-no);
     }
- 
-    /* ── ROOM PREVIEW ── */
+    .btn-danger:hover { background: rgba(255,95,95,0.1); }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* ── FURNITURE LIST ── */
+    #furnitureList {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    #furnitureList:empty::after {
+      content: 'No furniture added yet.';
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: block;
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    .furn-item {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      transition: border-color 0.15s;
+      cursor: pointer;
+    }
+    .furn-item:hover { border-color: #555; }
+    .furn-item.selected { border-color: var(--accent); }
+    .furn-item.overlapping { border-color: var(--fit-no) !important; }
+
+    /* inline edit form */
+    .furn-edit {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .furn-item.editing .furn-edit { display: flex; }
+    .furn-edit-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .furn-edit input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      padding: 5px 8px;
+      outline: none;
+    }
+    .furn-edit input:focus { border-color: var(--accent); }
+    .furn-edit-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .furn-edit-save {
+      flex: 1;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      padding: 5px 8px;
+      border-radius: 4px;
+      border: none;
+      background: var(--accent);
+      color: #0f0f0f;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .furn-edit-save:hover { background: var(--accent-dim); }
+    .furn-edit-cancel {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      padding: 5px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .furn-edit-cancel:hover { border-color: var(--fit-no); color: var(--fit-no); }
+
+    .furn-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .furn-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .furn-name {
+      font-size: 0.78rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .furn-dims {
+      font-size: 0.66rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .furn-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .furn-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .furn-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .furn-btn.del:hover { border-color: var(--fit-no); color: var(--fit-no); }
+
+    /* ── PREVIEW PANEL ── */
     .preview-panel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 24px;
     }
- 
+
     .room-wrap {
       display: flex;
       flex-direction: column;
@@ -189,19 +353,19 @@
       gap: 8px;
       margin-top: 16px;
     }
- 
+
     #widthLabel {
       font-size: 0.72rem;
       color: var(--muted);
       letter-spacing: 2px;
     }
- 
+
     .room-row {
       display: flex;
       align-items: center;
       gap: 10px;
     }
- 
+
     #lengthLabel {
       font-size: 0.72rem;
       color: var(--muted);
@@ -209,24 +373,23 @@
       writing-mode: vertical-rl;
       transform: rotate(180deg);
     }
- 
+
     #roomBox {
       position: relative;
-      width: 420px;
-      height: 420px;
+      width: 520px;
+      height: 520px;
       border: 3px solid #444;
       border-radius: 4px;
       background-color: var(--room-bg);
       background-image:
         linear-gradient(var(--grid) 1px, transparent 1px),
         linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-      background-size: 42px 42px;
+      background-size: 40px 40px;
       overflow: hidden;
       box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
       flex-shrink: 0;
     }
- 
-    /* corner ticks */
+
     #roomBox::before, #roomBox::after {
       content: '';
       position: absolute;
@@ -235,292 +398,1653 @@
       border-color: var(--accent);
       border-style: solid;
       opacity: 0.4;
+      z-index: 0;
     }
     #roomBox::before { top: 6px; left: 6px; border-width: 2px 0 0 2px; }
     #roomBox::after  { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
- 
-    #furnitureBox {
+
+    /* each furniture element inside roomBox */
+    .furn-el {
       position: absolute;
-      left: 0; top: 0;
-      background: rgba(200,245,90,0.18);
-      border: 2px solid var(--accent);
       border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: grab;
       user-select: none;
-      transition: background 0.15s;
-      min-width: 20px;
-      min-height: 20px;
-    }
-    #furnitureBox:active { cursor: grabbing; background: rgba(200,245,90,0.28); }
- 
-    #furnitureLabel {
-      font-size: 0.7rem;
-      color: var(--accent);
-      letter-spacing: 1px;
-      pointer-events: none;
+      border: 2px solid;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.5px;
       text-align: center;
       padding: 2px 4px;
       overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 100%;
+      text-overflow: ellipsis;
+      transition: box-shadow 0.15s;
+      z-index: 1;
     }
- 
+    .furn-el:active { cursor: grabbing; }
+    .furn-el.selected-el {
+      box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
+      z-index: 10;
+    }
+    .furn-el.overlap-el {
+      border-color: #ff5f5f !important;
+      background: rgba(255,95,95,0.25) !important;
+      color: #ff5f5f !important;
+    }
+
     .hint {
       font-size: 0.68rem;
-      color: #444;
+      color: var(--muted);
       text-align: center;
       margin-top: 10px;
       letter-spacing: 1px;
     }
- 
-    /* separator in panel */
-    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* snap badge */
+    #snapBadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      color: var(--muted);
+      background: transparent;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    #snapBadge .key {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.68rem;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    #snapBadge.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    #snapBadge.active .key {
+      border-color: var(--accent);
+      background: rgba(200,245,90,0.12);
+      color: var(--accent);
+    }
+    .hint-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* overlap warning bar */
+    #overlapWarning {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      letter-spacing: 1px;
+      text-align: center;
+      background: rgba(255,95,95,0.1);
+      border: 1px solid var(--fit-no);
+      color: var(--fit-no);
+    }
+
+    /* ── AI PASTE ── */
+    .ai-paste-toggle {
+      width: 100%;
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      padding: 8px 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      text-align: left;
+      transition: all 0.2s;
+      margin-bottom: 10px;
+    }
+    .ai-paste-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+    #aiPasteBox {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    #aiPasteBox.open { display: flex; }
+
+    #aiPasteBox textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      padding: 10px 12px;
+      resize: vertical;
+      min-height: 90px;
+      outline: none;
+      line-height: 1.5;
+      transition: border-color 0.2s;
+    }
+    #aiPasteBox textarea:focus { border-color: var(--accent); }
+    #aiPasteBox textarea::placeholder { color: #555; }
+
+    #aiStatus {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      min-height: 1em;
+      text-align: center;
+    }
+    #aiStatus.error { color: var(--fit-no); }
+    #aiStatus.success { color: var(--fit-yes); }
+
+    .btn-ai {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 1px;
+      padding: 9px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.15s;
+    }
+    .btn-ai:hover { background: rgba(200,245,90,0.1); }
+    .btn-ai:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── EXPORT BUTTON ── */
+    .btn-export {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 1px;
+      padding: 10px 22px;
+      border-radius: 6px;
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.15s;
+    }
+    .btn-export:hover { background: rgba(200,245,90,0.1); }
+    .btn-export:active { transform: scale(0.97); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 1px;
+      padding: 12px 22px;
+      border-radius: 24px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #toast.warn  { border-color: #f5a05a; color: #f5a05a; }
+    #toast.error { border-color: var(--fit-no); color: var(--fit-no); }
+    #toast.ok    { border-color: var(--fit-yes); color: var(--fit-yes); }
+    #toast .toast-btn {
+      margin-left: 12px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      border: 1px solid currentColor;
+      background: transparent;
+      color: inherit;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+    #toast .toast-btn:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── SAVE / LOAD ── */
+    #layoutsPanel {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    #layoutsPanel:empty::after {
+      content: 'No saved layouts yet.';
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: block;
+      text-align: center;
+      padding: 10px 0;
+    }
+    .layout-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      transition: border-color 0.15s;
+    }
+    .layout-item:hover { border-color: #555; }
+    .layout-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .layout-name {
+      font-size: 0.78rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .layout-meta {
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .layout-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    .save-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .save-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .save-row input:focus { border-color: var(--accent); }
+    .save-row input::placeholder { color: #444; }
+
+    /* auto-save indicator */
+    #autoSaveIndicator {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-align: right;
+      margin-top: 6px;
+      min-height: 1em;
+      transition: color 0.3s;
+    }
+    #autoSaveIndicator.saved { color: var(--fit-yes); }
+
+    /* ── LANDING SCREEN ── */
+    #landing {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0a;
+      transition: opacity 0.6s ease;
+      overflow: hidden;
+    }
+    #landing.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .landing-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(200,245,90,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,245,90,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: gridDrift 20s linear infinite;
+    }
+    @keyframes gridDrift {
+      from { background-position: 0 0; }
+      to   { background-position: 60px 60px; }
+    }
+    .landing-orb {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(200,245,90,0.07) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .landing-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .landing-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #c8f55a;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.2s ease forwards;
+      margin-bottom: 14px;
+    }
+    .landing-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(3.5rem, 12vw, 8rem);
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -4px;
+      line-height: 0.9;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+      margin-bottom: 18px;
+    }
+    .landing-logo span { color: #c8f55a; }
+    .landing-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: #444;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.5s ease forwards;
+      margin-bottom: 48px;
+    }
+    .landing-steps {
+      display: flex;
+      gap: 0;
+      margin-bottom: 48px;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.65s ease forwards;
+    }
+    .landing-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 0 22px;
+    }
+    .step-icon { font-size: 1.2rem; }
+    .step-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      color: #666;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .step-sep {
+      width: 1px;
+      height: 36px;
+      background: #c8f55a;
+      opacity: 0.25;
+      align-self: center;
+      flex-shrink: 0;
+    }
+    .btn-enter {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 15px 48px;
+      border-radius: 3px;
+      border: 1px solid #c8f55a;
+      background: transparent;
+      color: #c8f55a;
+      cursor: pointer;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.85s ease forwards;
+      transition: background 0.2s, color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-enter::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: #c8f55a;
+      transform: translateY(100%);
+      transition: transform 0.22s ease;
+      z-index: -1;
+    }
+    .btn-enter:hover::before { transform: translateY(0); }
+    .btn-enter:hover { color: #0a0a0a; }
+    .btn-enter:active { opacity: 0.85; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    body.light #landing { background: #f0f0ec; }
+    body.light .landing-grid {
+      background-image:
+        linear-gradient(rgba(74,124,16,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74,124,16,0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    body.light .landing-orb { background: radial-gradient(circle, rgba(74,124,16,0.08) 0%, transparent 70%); }
+    body.light .landing-eyebrow { color: #4a7c10; }
+    body.light .landing-logo { color: #111; }
+    body.light .landing-logo span { color: #4a7c10; }
+    body.light .landing-tag { color: #bbb; }
+    body.light .step-label { color: #bbb; }
+    body.light .step-sep { background: #e0e0e0; }
+    body.light .btn-enter { border-color: #4a7c10; color: #4a7c10; }
+    body.light .btn-enter::before { background: #4a7c10; }
+    body.light .btn-enter:hover { color: #fff; }
+
+        /* ── MARKERS ── */
+    .marker-type-btn, .wall-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 1px;
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.15s;
+      flex: 1;
+    }
+    .marker-type-btn.active, .wall-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(200,245,90,0.08);
+    }
+
+    /* marker elements inside roomBox */
+    .marker-el {
+      position: absolute;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .marker-el canvas {
+      display: block;
+    }
+    .marker-el:hover { opacity: 0.8; }
+
+    .marker-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.72rem;
+      color: var(--text);
+    }
+    .marker-item-info { flex: 1; font-size: 0.7rem; color: var(--muted); }
+
+    /* ── THEME TOGGLE ── */
+    #themeToggle {
+      position: fixed;
+      top: 18px;
+      right: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      z-index: 100;
+    }
+    #themeToggle:hover { border-color: var(--accent); color: var(--accent); }
   </style>
 </head>
 <body>
- 
+
+<button id="themeToggle" onclick="toggleTheme()">☀ Light</button>
+<div id="toast"></div>
+
+<!-- ── LANDING SCREEN ── -->
+<div id="landing">
+  <div class="landing-grid"></div>
+  <div class="landing-orb"></div>
+  <div class="landing-content">
+    <div class="landing-eyebrow">Room planner</div>
+    <div class="landing-logo">ROOM<span>FIT</span></div>
+    <div class="landing-tag">Will it actually fit?</div>
+    <div class="landing-steps">
+      <div class="landing-step">
+        <div class="step-icon">📐</div>
+        <div class="step-label">Set<br>room</div>
+      </div>
+      <div class="step-sep"></div>
+      <div class="landing-step">
+        <div class="step-icon">🛋️</div>
+        <div class="step-label">Add<br>furniture</div>
+      </div>
+      <div class="step-sep"></div>
+      <div class="landing-step">
+        <div class="step-icon">↔️</div>
+        <div class="step-label">Drag &<br>arrange</div>
+      </div>
+      <div class="step-sep"></div>
+      <div class="landing-step">
+        <div class="step-icon">💾</div>
+        <div class="step-label">Save &<br>export</div>
+      </div>
+    </div>
+    <button class="btn-enter" onclick="enterApp()">Enter →</button>
+  </div>
+</div>
+
 <header>
   <h1>ROOMFIT</h1>
   <p>Does it actually fit?</p>
 </header>
- 
+
 <div class="app">
- 
+
   <!-- ── LEFT PANEL ── -->
   <div class="panel">
- 
+
     <div class="section-label">Room</div>
     <div class="field">
       <label>Width (cm)</label>
-      <input type="number" id="roomWidth" placeholder="e.g. 400" min="1">
+      <input type="number" autocomplete="off" id="roomWidth" placeholder="e.g. 400" min="1">
     </div>
     <div class="field">
       <label>Length (cm)</label>
-      <input type="number" id="roomLength" placeholder="e.g. 300" min="1">
+      <input type="number" autocomplete="off" id="roomLength" placeholder="e.g. 300" min="1">
     </div>
- 
+    <div class="btn-row">
+      <button class="btn-primary" onclick="applyRoom()">Set Room</button>
+      <button class="btn-secondary" onclick="resetAll()">Reset All</button>
+    </div>
+
     <hr class="divider">
- 
-    <div class="section-label">Furniture</div>
+
+    <div class="section-label">Add Furniture</div>
+
+    <!-- AI paste -->
+    <button class="ai-paste-toggle" onclick="toggleAiPaste()">✦ Paste product description to auto-detect</button>
+    <div id="aiPasteBox">
+      <textarea id="aiPasteText" placeholder="Paste product specs or description from Amazon, Flipkart, etc..."></textarea>
+      <button class="btn-ai" id="aiDetectBtn" onclick="detectMeasurements()">⟳ Detect Measurements</button>
+      <div id="aiStatus"></div>
+    </div>
+
     <div class="field">
       <label>Name</label>
-      <input type="text" id="furnitureName" placeholder="e.g. Sofa">
+      <input type="text" autocomplete="off" id="furnName" placeholder="e.g. Sofa">
     </div>
     <div class="field">
       <label>Width (cm)</label>
-      <input type="number" id="furnWidth" placeholder="e.g. 180" min="1">
+      <input type="number" autocomplete="off" id="furnWidth" placeholder="e.g. 180" min="1">
     </div>
     <div class="field">
       <label>Length (cm)</label>
-      <input type="number" id="furnLength" placeholder="e.g. 90" min="1">
+      <input type="number" autocomplete="off" id="furnLength" placeholder="e.g. 90" min="1">
     </div>
- 
     <div class="btn-row">
-      <button class="btn-primary" onclick="checkFit()">Check Fit</button>
-      <button class="btn-secondary" onclick="rotateFurniture()">↻ Rotate</button>
-      <button class="btn-secondary" onclick="resetAll()">Reset</button>
+      <button class="btn-primary" onclick="addFurniture()">+ Add to Room</button>
     </div>
- 
-    <div id="fitResult"></div>
- 
+
+    <hr class="divider">
+
+    <div class="section-label">Pieces</div>
+    <div id="furnitureList"></div>
+
+    <hr class="divider">
+
+    <div class="section-label">Layouts</div>
+    <div class="save-row">
+      <input type="text" autocomplete="off" id="layoutName" placeholder="Layout name…">
+      <button class="btn-secondary" onclick="saveLayout()">Save</button>
+    </div>
+    <div id="autoSaveIndicator"></div>
+    <div id="layoutsPanel"></div>
+
+    <hr class="divider">
+
+    <div class="section-label">Doors & Windows</div>
+    <div class="field">
+      <label>Type</label>
+      <div style="display:flex;gap:6px;">
+        <button class="marker-type-btn active" id="mtype-door" onclick="setMarkerType('door')">🚪 Door</button>
+        <button class="marker-type-btn" id="mtype-window" onclick="setMarkerType('window')">🪟 Window</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Wall</label>
+      <div style="display:flex;gap:6px;">
+        <button class="wall-btn active" id="wall-top"    onclick="setWall('top')">Top</button>
+        <button class="wall-btn" id="wall-bottom" onclick="setWall('bottom')">Bottom</button>
+        <button class="wall-btn" id="wall-left"   onclick="setWall('left')">Left</button>
+        <button class="wall-btn" id="wall-right"  onclick="setWall('right')">Right</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Size (cm)</label>
+      <input type="number" id="markerSize" autocomplete="off" placeholder="e.g. 90" min="1">
+    </div>
+    <div class="field">
+      <label>Position from start of wall (cm)</label>
+      <input type="number" id="markerPos" autocomplete="off" placeholder="e.g. 100" min="0">
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="addMarker()">+ Place Marker</button>
+    </div>
+    <div id="markerList" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;"></div>
+
   </div>
- 
+
   <!-- ── RIGHT PANEL ── -->
   <div class="preview-panel">
     <div class="section-label">Room Preview</div>
- 
+
     <div class="room-wrap">
       <div id="widthLabel">— cm</div>
       <div class="room-row">
         <div id="lengthLabel">— cm</div>
-        <div id="roomBox">
-          <div id="furnitureBox">
-            <span id="furnitureLabel"></span>
-          </div>
-        </div>
+        <div id="roomBox"></div>
       </div>
     </div>
- 
-    <p class="hint">drag furniture to reposition</p>
+
+    <div id="overlapWarning">⚠ Some pieces are overlapping</div>
+    <div class="hint-row">
+      <p class="hint">click to select · drag to move</p>
+      <div id="snapBadge"><span class="key">⇧ Shift</span> snap to grid</div>
+    </div>
+    <div style="text-align:center; margin-top:14px;">
+      <button class="btn-export" onclick="exportImage()">↓ Export as Image</button>
+    </div>
   </div>
- 
+
 </div>
- 
+
+
 <script>
+  // ── LANDING ──
+  function enterApp() {
+    const landing = document.getElementById('landing');
+    landing.classList.add('hidden');
+    setTimeout(() => { landing.style.display = 'none'; }, 500);
+  }
+
+  // ── TOAST ──
+  let toastTimer = null;
+  function toast(msg, type = 'warn') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = ''; }, 3000);
+  }
+  function toastWithAction(msg, type, btnLabel, onAction) {
+    const el = document.getElementById('toast');
+    el.innerHTML = `${msg}<button class="toast-btn" id="toastActionBtn">${btnLabel}</button>`;
+    el.className = 'show ' + type;
+    clearTimeout(toastTimer);
+    document.getElementById('toastActionBtn').addEventListener('click', () => {
+      onAction();
+      el.className = '';
+    });
+    toastTimer = setTimeout(() => { el.className = ''; }, 5000);
+  }
+
+  // ── SAVE / LOAD ──
+  const STORAGE_KEY = 'roomfit_layouts';
+
+  function getLayouts() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch { return {}; }
+  }
+
+  function saveLayouts(layouts) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
+  }
+
+  function saveLayout(isAuto = false) {
+    if (!roomW || !roomL) { if (!isAuto) toast('Set up a room before saving.'); return; }
+
+    const nameInput = document.getElementById('layoutName');
+    const name = isAuto
+      ? (nameInput.value.trim() || '__autosave__')
+      : (nameInput.value.trim());
+
+    if (!name && !isAuto) { toast('Enter a name for this layout.'); return; }
+
+    const layouts = getLayouts();
+    layouts[name] = {
+      roomW, roomL,
+      pieces: pieces.map(p => ({ ...p })),
+      markers: markers.map(m => ({ ...m })),
+      savedAt: new Date().toLocaleString(),
+      manual: !isAuto
+    };
+    saveLayouts(layouts);
+
+    // mark that user has manually saved at least once
+    if (!isAuto) localStorage.setItem('roomfit_has_manual', '1');
+
+    renderLayoutsList();
+
+    if (isAuto) {
+      const ind = document.getElementById('autoSaveIndicator');
+      ind.textContent = '● auto-saved';
+      ind.className = 'saved';
+      setTimeout(() => { ind.textContent = ''; ind.className = ''; }, 2000);
+    } else {
+      toast(`✔ Layout "${name}" saved`, 'ok');
+    }
+  }
+
+  function loadLayout(name) {
+    const layouts = getLayouts();
+    const layout = layouts[name];
+    if (!layout) return;
+
+    // clear all furniture elements from roomBox
+    pieces.forEach(p => {
+      const el = document.getElementById('furn-' + p.id);
+      if (el) el.remove();
+    });
+    pieces = [];
+    markers.forEach(m => {
+      const el = document.getElementById('marker-' + m.id);
+      if (el) el.remove();
+    });
+    markers = [];
+    markerNextId = 1;
+
+    // clear markers
+    markers.forEach(m => {
+      const el = document.getElementById('marker-' + m.id);
+      if (el) el.remove();
+    });
+    markers = [];
+    markerNextId = 1;
+    selectedId = null;
+    colorCursor = 0;
+    nextId = 1;
+
+    // restore room
+    roomW = layout.roomW;
+    roomL = layout.roomL;
+    scale = CANVAS / Math.max(roomW, roomL);
+
+    roomBox.style.width  = (roomW * scale) + 'px';
+    roomBox.style.height = (roomL * scale) + 'px';
+    document.getElementById('roomWidth').value  = roomW;
+    document.getElementById('roomLength').value = roomL;
+    widthLabel.textContent  = roomW + ' cm';
+    lengthLabel.textContent = roomL + ' cm';
+
+    // restore pieces
+    layout.pieces.forEach(saved => {
+      const p = { ...saved };
+      pieces.push(p);
+      colorCursor = Math.max(colorCursor, p.colorIdx + 1);
+      nextId      = Math.max(nextId, p.id + 1);
+      createEl(p);
+    });
+
+    renderList();
+    checkOverlaps();
+
+    // restore markers
+    if (layout.markers) {
+      layout.markers.forEach(m => {
+        markers.push({ ...m });
+        markerNextId = Math.max(markerNextId, m.id + 1);
+        drawMarker(m);
+      });
+    }
+    renderMarkerList();
+
+    document.getElementById('layoutName').value = name === '__autosave__' ? '' : name;
+    if (name !== '__autosave__') toast(`✔ Layout "${name}" loaded`, 'ok');
+  }
+
+  function deleteLayout(name) {
+    const layouts = getLayouts();
+    delete layouts[name];
+    saveLayouts(layouts);
+    renderLayoutsList();
+    toast(`Layout "${name}" deleted`, 'warn');
+  }
+
+  function renderLayoutsList() {
+    const panel = document.getElementById('layoutsPanel');
+    const layouts = getLayouts();
+    const keys = Object.keys(layouts).filter(k => k !== '__autosave__');
+    panel.innerHTML = '';
+
+    if (keys.length === 0) { panel.innerHTML = ''; return; }
+
+    keys.reverse().forEach(name => {
+      const l = layouts[name];
+      const item = document.createElement('div');
+      item.className = 'layout-item';
+      item.innerHTML = `
+        <div class="layout-info">
+          <div class="layout-name">${name}</div>
+          <div class="layout-meta">${l.roomW}×${l.roomL} cm · ${l.pieces.length} piece${l.pieces.length !== 1 ? 's' : ''} · ${l.savedAt}</div>
+        </div>
+        <div class="layout-actions">
+          <button class="furn-btn" onclick="loadLayout('${name}')">Load</button>
+          ${l.manual ? `<button class="furn-btn del" onclick="deleteLayout('${name}')">✕</button>` : ''}
+        </div>
+      `;
+      panel.appendChild(item);
+    });
+  }
+
+  // auto-save every 30 seconds if room is set
+  setInterval(() => { if (roomW && roomL) saveLayout(true); }, 30000);
+
+  // load autosave on page load only if user has never manually saved
+  window.addEventListener('load', () => {
+    renderLayoutsList();
+    const hasManual = localStorage.getItem('roomfit_has_manual') === '1';
+    if (!hasManual) {
+      const layouts = getLayouts();
+      if (layouts['__autosave__']) {
+        // reset roomBox first, then restore after paint
+        roomBox.style.width  = CANVAS + 'px';
+        roomBox.style.height = CANVAS + 'px';
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            loadLayout('__autosave__');
+            toast('↺ Last session restored', 'ok');
+          }, 100);
+        });
+      }
+    }
+  });
+
+  // ── AI PASTE ──
+  function toggleAiPaste() {
+    document.getElementById('aiPasteBox').classList.toggle('open');
+    document.getElementById('aiStatus').textContent = '';
+  }
+
+  async function detectMeasurements() {
+    const text = document.getElementById('aiPasteText').value.trim();
+    if (!text) { setAiStatus('Paste some product text first.', 'error'); return; }
+
+    const btn = document.getElementById('aiDetectBtn');
+    btn.disabled = true;
+    btn.textContent = '⟳ Detecting...';
+    setAiStatus('Analysing product description…', '');
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 300,
+          messages: [{
+            role: 'user',
+            content: `Extract the product name and physical dimensions (width and depth/length) from the following product description. Convert all measurements to centimetres (round to 1 decimal place). Respond ONLY with a valid JSON object in this exact format, nothing else:
+{"name":"<product name>","width":<number in cm>,"length":<number in cm>}
+
+If you cannot find clear width and depth/length dimensions, respond with:
+{"error":"Could not find dimensions"}
+
+Product description:
+${text}`
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const raw = data.content?.map(b => b.text || '').join('').trim();
+      const clean = raw.replace(/```json|```/g, '').trim();
+      const result = JSON.parse(clean);
+
+      if (result.error) {
+        setAiStatus('⚠ ' + result.error, 'error');
+      } else {
+        document.getElementById('furnName').value   = result.name   || '';
+        document.getElementById('furnWidth').value  = result.width  || '';
+        document.getElementById('furnLength').value = result.length || '';
+        setAiStatus(`✔ Detected: ${result.name} — ${result.width}×${result.length} cm`, 'success');
+
+        // close paste box after short delay
+        setTimeout(() => {
+          document.getElementById('aiPasteBox').classList.remove('open');
+          document.getElementById('aiPasteText').value = '';
+        }, 1800);
+      }
+    } catch (err) {
+      setAiStatus('⚠ Something went wrong. Try again.', 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '⟳ Detect Measurements';
+  }
+
+  function setAiStatus(msg, type) {
+    const el = document.getElementById('aiStatus');
+    el.textContent = msg;
+    el.className = type;
+  }
+
+  // ── EXPORT AS IMAGE ──
+  function exportImage() {
+    if (!roomW || !roomL) { toast('Set up a room first.'); return; }
+
+    const isDark = !document.body.classList.contains('light');
+    const rw = parseFloat(roomBox.style.width)  || roomW * scale;
+    const rh = parseFloat(roomBox.style.height) || roomL * scale;
+    const DPR = 2;
+    const PAD = 20;       // padding around room
+    const LABEL = 36;     // bottom label bar height
+
+    const cvs = document.createElement('canvas');
+    cvs.width  = (rw + PAD * 2) * DPR;
+    cvs.height = (rh + PAD * 2 + LABEL) * DPR;
+    const ctx = cvs.getContext('2d');
+    ctx.scale(DPR, DPR);
+
+    // ── background ──
+    ctx.fillStyle = isDark ? '#0f0f0f' : '#f5f5f0';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+    const ox = PAD, oy = PAD; // room origin
+
+    // ── room floor ──
+    ctx.fillStyle = isDark ? '#141414' : '#e8e8e0';
+    ctx.fillRect(ox, oy, rw, rh);
+
+    // ── grid lines ──
+    const GRID = 40;
+    ctx.strokeStyle = isDark ? '#222' : '#d0d0c8';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= rw; x += GRID) {
+      ctx.beginPath(); ctx.moveTo(ox + x, oy); ctx.lineTo(ox + x, oy + rh); ctx.stroke();
+    }
+    for (let y = 0; y <= rh; y += GRID) {
+      ctx.beginPath(); ctx.moveTo(ox, oy + y); ctx.lineTo(ox + rw, oy + y); ctx.stroke();
+    }
+
+    // ── furniture pieces ──
+    pieces.forEach(p => {
+      const c = COLORS[p.colorIdx];
+      const pw = effW(p) * scale;
+      const ph = effH(p) * scale;
+      const px = ox + p.x;
+      const py = oy + p.y;
+
+      // fill
+      ctx.fillStyle = c.bg.replace('0.18', '0.35');
+      ctx.beginPath();
+      ctx.roundRect(px, py, pw, ph, 4);
+      ctx.fill();
+
+      // border
+      ctx.strokeStyle = c.border;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(px, py, pw, ph, 4);
+      ctx.stroke();
+
+      // label
+      ctx.fillStyle = c.text;
+      ctx.font = `500 ${Math.max(10, Math.min(13, pw / 6))}px DM Mono, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // clip text to box
+      ctx.save();
+      ctx.rect(px + 4, py + 4, pw - 8, ph - 8);
+      ctx.clip();
+      ctx.fillText(p.name, px + pw / 2, py + ph / 2);
+      ctx.restore();
+    });
+
+    // ── room border ──
+    ctx.strokeStyle = isDark ? '#444' : '#aaa';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(ox, oy, rw, rh);
+
+    // ── corner ticks ──
+    const accentColor = isDark ? '#c8f55a' : '#4a7c10';
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.5;
+    const T = 10;
+    // top-left
+    ctx.beginPath(); ctx.moveTo(ox + T, oy); ctx.lineTo(ox, oy); ctx.lineTo(ox, oy + T); ctx.stroke();
+    // bottom-right
+    ctx.beginPath(); ctx.moveTo(ox + rw - T, oy + rh); ctx.lineTo(ox + rw, oy + rh); ctx.lineTo(ox + rw, oy + rh - T); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // ── dimension labels on image ──
+    ctx.fillStyle = isDark ? '#888' : '#777';
+    ctx.font = '500 11px DM Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(`${roomW} cm`, ox + rw / 2, oy - 6);
+    ctx.save();
+    ctx.translate(ox - 8, oy + rh / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(`${roomL} cm`, 0, 0);
+    ctx.restore();
+
+    // ── bottom label bar ──
+    ctx.fillStyle = isDark ? '#888' : '#777';
+    ctx.font = '500 12px DM Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`ROOMFIT  ·  ${roomW} × ${roomL} cm  ·  ${pieces.length} piece${pieces.length !== 1 ? 's' : ''}`, ox + rw / 2, oy + rh + LABEL / 2);
+
+    // ── download ──
+    const link = document.createElement('a');
+    link.download = 'roomfit-layout.png';
+    link.href = cvs.toDataURL('image/png');
+    link.click();
+  }
+
+  // ── MARKERS ──
+  let markers = [];
+  let markerNextId = 1;
+  let selectedMarkerType = 'door';
+  let selectedWall = 'top';
+
+  function setMarkerType(type) {
+    selectedMarkerType = type;
+    document.querySelectorAll('.marker-type-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('mtype-' + type).classList.add('active');
+  }
+
+  function setWall(wall) {
+    selectedWall = wall;
+    document.querySelectorAll('.wall-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('wall-' + wall).classList.add('active');
+  }
+
+  function addMarker() {
+    if (!roomW || !roomL) { toast('Set up a room first.'); return; }
+    const size = parseFloat(document.getElementById('markerSize').value);
+    const pos  = parseFloat(document.getElementById('markerPos').value);
+    if (!size || isNaN(pos)) { toast('Enter marker size and position.'); return; }
+
+    const wallLen = (selectedWall === 'top' || selectedWall === 'bottom') ? roomW : roomL;
+    if (pos + size > wallLen) { toast('Marker goes beyond the wall length.'); return; }
+
+    const marker = { id: markerNextId++, type: selectedMarkerType, wall: selectedWall, size, pos };
+    markers.push(marker);
+    drawMarker(marker);
+    renderMarkerList();
+    saveLayout(true);
+  }
+
+  function drawMarker(m) {
+    const existingEl = document.getElementById('marker-' + m.id);
+    if (existingEl) existingEl.remove();
+
+    const isDark = !document.body.classList.contains('light');
+    const color  = m.type === 'door' ? '#5ac8f5' : '#f5a05a';
+    const sz  = m.size  * scale;
+    const off = m.pos   * scale;
+    const thick = 6; // wall thickness visual
+    const swing = sz;  // door swing radius
+
+    const el = document.createElement('div');
+    el.className = 'marker-el';
+    el.id = 'marker-' + m.id;
+    el.title = `${m.type} · ${m.wall} wall · ${m.size}cm`;
+
+    const cvs = document.createElement('canvas');
+    let cw, ch;
+
+    if (m.wall === 'top' || m.wall === 'bottom') {
+      cw = sz;
+      ch = m.type === 'door' ? swing + thick : 14;
+    } else {
+      ch = sz;
+      cw = m.type === 'door' ? swing + thick : 14;
+    }
+
+    cvs.width  = cw;
+    cvs.height = ch;
+    const ctx = cvs.getContext('2d');
+
+    ctx.strokeStyle = color;
+    ctx.fillStyle   = color + '22';
+    ctx.lineWidth   = 1.5;
+
+    if (m.type === 'door') {
+      // wall gap line + arc swing
+      if (m.wall === 'top') {
+        ctx.fillStyle = color + '18';
+        ctx.beginPath();
+        ctx.moveTo(0, thick); ctx.lineTo(sz, thick);
+        ctx.arc(0, thick, swing, 0, Math.PI / 2);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(0, thick); ctx.lineTo(sz, thick); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(sz, thick); ctx.lineTo(sz, thick + 4); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, thick, swing, 0, Math.PI / 2); ctx.stroke();
+      } else if (m.wall === 'bottom') {
+        ctx.fillStyle = color + '18';
+        ctx.beginPath();
+        ctx.moveTo(0, ch - thick); ctx.lineTo(sz, ch - thick);
+        ctx.arc(0, ch - thick, swing, 0, -Math.PI / 2, true);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(0, ch - thick); ctx.lineTo(sz, ch - thick); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, ch - thick, swing, 0, -Math.PI / 2, true); ctx.stroke();
+      } else if (m.wall === 'left') {
+        ctx.fillStyle = color + '18';
+        ctx.beginPath();
+        ctx.moveTo(thick, 0); ctx.lineTo(thick, sz);
+        ctx.arc(thick, 0, swing, Math.PI / 2, Math.PI);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(thick, 0); ctx.lineTo(thick, sz); ctx.stroke();
+        ctx.beginPath(); ctx.arc(thick, 0, swing, Math.PI / 2, Math.PI); ctx.stroke();
+      } else { // right
+        ctx.fillStyle = color + '18';
+        ctx.beginPath();
+        ctx.moveTo(cw - thick, 0); ctx.lineTo(cw - thick, sz);
+        ctx.arc(cw - thick, 0, swing, Math.PI / 2, 0, true);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(cw - thick, 0); ctx.lineTo(cw - thick, sz); ctx.stroke();
+        ctx.beginPath(); ctx.arc(cw - thick, 0, swing, Math.PI / 2, 0, true); ctx.stroke();
+      }
+    } else {
+      // window — parallel lines
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      if (m.wall === 'top' || m.wall === 'bottom') {
+        const y = m.wall === 'top' ? 2 : ch - 2;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(sz, y); ctx.stroke();
+        const mid = m.wall === 'top' ? 7 : ch - 7;
+        ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(sz, mid); ctx.stroke();
+        ctx.lineWidth = 0.8; ctx.globalAlpha = 0.4;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(0, mid); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(sz, y); ctx.lineTo(sz, mid); ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else {
+        const x = m.wall === 'left' ? 2 : cw - 2;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, sz); ctx.stroke();
+        const mid = m.wall === 'left' ? 7 : cw - 7;
+        ctx.beginPath(); ctx.moveTo(mid, 0); ctx.lineTo(mid, sz); ctx.stroke();
+        ctx.lineWidth = 0.8; ctx.globalAlpha = 0.4;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(mid, 0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, sz); ctx.lineTo(mid, sz); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    el.appendChild(cvs);
+
+    // position on roomBox wall
+    const rw = roomW * scale, rh = roomL * scale;
+    if (m.wall === 'top')    { el.style.left = off + 'px'; el.style.top  = '0px'; }
+    if (m.wall === 'bottom') { el.style.left = off + 'px'; el.style.bottom = '0px'; el.style.top = 'auto'; }
+    if (m.wall === 'left')   { el.style.top  = off + 'px'; el.style.left = '0px'; }
+    if (m.wall === 'right')  { el.style.top  = off + 'px'; el.style.right = '0px'; el.style.left = 'auto'; }
+
+    el.addEventListener('click', () => {
+      toastWithAction(`Remove this ${m.type}?`, 'warn', 'Remove', () => removeMarker(m.id));
+    });
+
+    roomBox.appendChild(el);
+  }
+
+  function removeMarker(id) {
+    const el = document.getElementById('marker-' + id);
+    if (el) el.remove();
+    markers = markers.filter(m => m.id !== id);
+    renderMarkerList();
+    saveLayout(true);
+  }
+
+  function renderMarkerList() {
+    const list = document.getElementById('markerList');
+    list.innerHTML = '';
+    markers.forEach(m => {
+      const item = document.createElement('div');
+      item.className = 'marker-item';
+      item.innerHTML = `
+        <span>${m.type === 'door' ? '🚪' : '🪟'}</span>
+        <div class="marker-item-info">${m.wall} wall · ${m.size}cm @ ${m.pos}cm</div>
+        <button class="furn-btn del" onclick="removeMarker(${m.id})">✕</button>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function redrawAllMarkers() {
+    markers.forEach(m => drawMarker(m));
+  }
+
+  // ── SNAP BADGE ──
+  const snapBadge = document.getElementById('snapBadge');
+  document.addEventListener('keydown', e => { if (e.key === 'Shift') snapBadge.classList.add('active'); });
+  document.addEventListener('keyup',   e => { if (e.key === 'Shift') snapBadge.classList.remove('active'); });
+
+  // ── THEME ──
+  function toggleTheme() {
+    // flash overlay
+    const flash = document.createElement('div');
+    flash.style.cssText = `
+      position: fixed; inset: 0; z-index: 9999;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    `;
+    document.body.appendChild(flash);
+
+    requestAnimationFrame(() => {
+      flash.style.opacity = '0.18';
+      setTimeout(() => {
+        document.body.classList.toggle('light');
+        const isLight = document.body.classList.contains('light');
+        document.getElementById('themeToggle').textContent = isLight ? '☾ Dark' : '☀ Light';
+        flash.style.opacity = '0';
+        setTimeout(() => flash.remove(), 300);
+      }, 180);
+    });
+  }
+
+  // ── PALETTE ──
+  const COLORS = [
+    { border: '#c8f55a', bg: 'rgba(200,245,90,0.18)',  text: '#c8f55a'  },
+    { border: '#5ac8f5', bg: 'rgba(90,200,245,0.18)',  text: '#5ac8f5'  },
+    { border: '#f5a05a', bg: 'rgba(245,160,90,0.18)',  text: '#f5a05a'  },
+    { border: '#c45af5', bg: 'rgba(196,90,245,0.18)',  text: '#c45af5'  },
+    { border: '#f55a8a', bg: 'rgba(245,90,138,0.18)',  text: '#f55a8a'  },
+    { border: '#5af5c8', bg: 'rgba(90,245,200,0.18)',  text: '#5af5c8'  },
+    { border: '#f5e05a', bg: 'rgba(245,224,90,0.18)',  text: '#f5e05a'  },
+    { border: '#5a8af5', bg: 'rgba(90,138,245,0.18)',  text: '#5a8af5'  },
+  ];
+
   // ── STATE ──
-  let rotated = false;   // true = furniture is 90° rotated (width/length swapped)
-  let furnW = 0, furnL = 0;  // actual furniture dims (before rotation)
- 
-  const CANVAS = 420;    // px size of roomBox
- 
-  // ── DOM refs ──
-  const roomBox       = document.getElementById("roomBox");
-  const furnitureBox  = document.getElementById("furnitureBox");
-  const furnitureLabel= document.getElementById("furnitureLabel");
-  const fitResult     = document.getElementById("fitResult");
-  const widthLabel    = document.getElementById("widthLabel");
-  const lengthLabel   = document.getElementById("lengthLabel");
- 
-  // ── CHECK FIT ──
-  function checkFit() {
-    const roomW = parseFloat(document.getElementById("roomWidth").value);
-    const roomL = parseFloat(document.getElementById("roomLength").value);
-    furnW        = parseFloat(document.getElementById("furnWidth").value);
-    furnL        = parseFloat(document.getElementById("furnLength").value);
-    const name   = document.getElementById("furnitureName").value.trim() || "Furniture";
- 
-    if (!roomW || !roomL || !furnW || !furnL) {
-      showResult(null, "Fill in all measurements first.");
+  const CANVAS = 520;
+  let roomW = 0, roomL = 0, scale = 1;
+  let pieces = [];      // { id, name, w, h, rotated, x, y, colorIdx }
+  let selectedId = null;
+  let nextId = 1;
+  let colorCursor = 0;
+
+  const roomBox     = document.getElementById('roomBox');
+  const widthLabel  = document.getElementById('widthLabel');
+  const lengthLabel = document.getElementById('lengthLabel');
+  const listEl      = document.getElementById('furnitureList');
+  const overlapWarn = document.getElementById('overlapWarning');
+
+  // ── SET ROOM ──
+  function applyRoom() {
+    const w = parseFloat(document.getElementById('roomWidth').value);
+    const l = parseFloat(document.getElementById('roomLength').value);
+    if (!w || !l) { toast('Enter room width and length first.'); return; }
+
+    roomW = w; roomL = l;
+    scale = CANVAS / Math.max(w, l);
+
+    roomBox.style.width  = (roomW * scale) + 'px';
+    roomBox.style.height = (roomL * scale) + 'px';
+    widthLabel.textContent  = roomW + ' cm';
+    lengthLabel.textContent = roomL + ' cm';
+
+    // re-render all pieces at new scale
+    pieces.forEach(p => {
+      clampPiece(p);
+      updateEl(p);
+    });
+    checkOverlaps();
+    toast(`✔ Room set to ${roomW} × ${roomL} cm`, 'ok');
+    redrawAllMarkers();
+    saveLayout(true);
+  }
+
+  // ── ADD FURNITURE ──
+  function addFurniture() {
+    if (!roomW || !roomL) { toast('Set the room dimensions first.'); return; }
+    const name = document.getElementById('furnName').value.trim() || 'Furniture';
+    const w    = parseFloat(document.getElementById('furnWidth').value);
+    const h    = parseFloat(document.getElementById('furnLength').value);
+    if (!w || !h) { toast('Enter furniture width and length.'); return; }
+
+    const fits = w <= roomW && h <= roomL;
+    const fitsRotated = h <= roomW && w <= roomL;
+
+    if (!fits && !fitsRotated) {
+      toast(`⚠ ${name} doesn't fit in the room even when rotated`, 'error');
       return;
     }
- 
-    // Reset rotation on new check
-    rotated = false;
- 
-    // Labels
-    widthLabel.textContent  = roomW + " cm";
-    lengthLabel.textContent = roomL + " cm";
- 
-    // Scale room canvas
-    const scale = CANVAS / Math.max(roomW, roomL);
-    roomBox.style.width  = (roomW * scale) + "px";
-    roomBox.style.height = (roomL * scale) + "px";
- 
-    // Scale furniture
-    furnitureBox.style.width  = (furnW * scale) + "px";
-    furnitureBox.style.height = (furnL * scale) + "px";
-    furnitureBox.style.left   = "0px";
-    furnitureBox.style.top    = "0px";
- 
-    furnitureLabel.textContent = name;
- 
-    // Fit check
-    const fits = furnW <= roomW && furnL <= roomL;
-    showResult(fits, fits
-      ? `✔ ${name} fits  (${furnW}×${furnL} cm into ${roomW}×${roomL} cm)`
-      : `✘ ${name} does not fit  (${furnW}×${furnL} cm > ${roomW}×${roomL} cm)`
-    );
+
+    const colorIdx = colorCursor % COLORS.length;
+    colorCursor++;
+
+    const piece = { id: nextId++, name, w, h, rotated: false, x: 0, y: 0, colorIdx, fits };
+    pieces.push(piece);
+
+    createEl(piece);
+    renderList();
+    checkOverlaps();
+    selectPiece(piece.id);
+
+    if (!piece.fits && fitsRotated) {
+      toastWithAction(
+        `⚠ ${name} fits better rotated`,
+        'warn',
+        '↻ Auto-Rotate',
+        () => rotatePiece(piece.id)
+      );
+    } else {
+      toast(`✔ ${name} added to room`, 'ok');
+    }
+    saveLayout(true);
+
+    // clear inputs
+    document.getElementById('furnName').value   = '';
+    document.getElementById('furnWidth').value  = '';
+    document.getElementById('furnLength').value = '';
   }
- 
+
+  // ── CREATE DOM ELEMENT FOR PIECE ──
+  function createEl(p) {
+    const c = COLORS[p.colorIdx];
+    const el = document.createElement('div');
+    el.className = 'furn-el';
+    el.id = 'furn-' + p.id;
+    el.textContent = p.name;
+    el.style.borderColor = c.border;
+    el.style.background  = c.bg;
+    el.style.color       = c.text;
+    el.style.left = (p.x) + 'px';
+    el.style.top  = (p.y) + 'px';
+    el.style.width  = (effW(p) * scale) + 'px';
+    el.style.height = (effH(p) * scale) + 'px';
+
+    el.addEventListener('mousedown', e => { selectPiece(p.id); startDrag(e, p); e.preventDefault(); });
+    roomBox.appendChild(el);
+  }
+
+  function updateEl(p) {
+    const el = document.getElementById('furn-' + p.id);
+    if (!el) return;
+    el.style.left   = p.x + 'px';
+    el.style.top    = p.y + 'px';
+    el.style.width  = (effW(p) * scale) + 'px';
+    el.style.height = (effH(p) * scale) + 'px';
+    el.textContent  = p.name;
+  }
+
+  function removeEl(id) {
+    const el = document.getElementById('furn-' + id);
+    if (el) el.remove();
+  }
+
+  function effW(p) { return p.rotated ? p.h : p.w; }
+  function effH(p) { return p.rotated ? p.w : p.h; }
+
+  // ── SELECT ──
+  function selectPiece(id) {
+    if (selectedId === id) return; // already selected, don't re-render
+    selectedId = id;
+    document.querySelectorAll('.furn-el').forEach(el => el.classList.remove('selected-el'));
+    const el = document.getElementById('furn-' + id);
+    if (el) el.classList.add('selected-el');
+    renderList();
+  }
+
   // ── ROTATE ──
-  function rotateFurniture() {
-    if (!furnW || !furnL) return;
- 
-    rotated = !rotated;
- 
-    const roomW = parseFloat(document.getElementById("roomWidth").value)  || 0;
-    const roomL = parseFloat(document.getElementById("roomLength").value) || 0;
-    if (!roomW || !roomL) return;
- 
-    const scale = CANVAS / Math.max(roomW, roomL);
- 
-    // Effective dims after rotation
-    const effW = rotated ? furnL : furnW;
-    const effL = rotated ? furnW : furnL;
- 
-    // Resize box physically (no CSS transform — avoids drag confusion)
-    furnitureBox.style.width  = (effW * scale) + "px";
-    furnitureBox.style.height = (effL * scale) + "px";
- 
-    // Clamp position so it stays inside room
-    clampFurniture();
- 
-    // Re-evaluate fit
-    const fits = effW <= roomW && effL <= roomL;
-    const name = furnitureLabel.textContent || "Furniture";
-    showResult(fits, fits
-      ? `✔ ${name} fits  (${effW}×${effL} cm into ${roomW}×${roomL} cm)`
-      : `✘ ${name} does not fit  (${effW}×${effL} cm > ${roomW}×${roomL} cm)`
-    );
+  function rotatePiece(id) {
+    const p = pieces.find(x => x.id === id);
+    if (!p) return;
+    p.rotated = !p.rotated;
+    p.fits = effW(p) <= roomW && effH(p) <= roomL;
+    clampPiece(p);
+    updateEl(p);
+    renderList();
+    checkOverlaps();
   }
- 
+
+  // ── REMOVE ──
+  function removePiece(id) {
+    removeEl(id);
+    pieces = pieces.filter(x => x.id !== id);
+    if (selectedId === id) selectedId = null;
+    renderList();
+    checkOverlaps();
+  }
+
+  // ── CLAMP ──
+  function clampPiece(p) {
+    const maxX = roomW * scale - effW(p) * scale;
+    const maxY = roomL * scale - effH(p) * scale;
+    p.x = Math.min(Math.max(p.x, 0), Math.max(maxX, 0));
+    p.y = Math.min(Math.max(p.y, 0), Math.max(maxY, 0));
+  }
+
+  // ── OVERLAP DETECTION ──
+  function rectsOverlap(a, b) {
+    const ax1 = a.x, ay1 = a.y;
+    const ax2 = ax1 + effW(a) * scale;
+    const ay2 = ay1 + effH(a) * scale;
+    const bx1 = b.x, by1 = b.y;
+    const bx2 = bx1 + effW(b) * scale;
+    const by2 = by1 + effH(b) * scale;
+    return ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1;
+  }
+
+  function checkOverlaps() {
+    const overlapping = new Set();
+    for (let i = 0; i < pieces.length; i++) {
+      for (let j = i + 1; j < pieces.length; j++) {
+        if (rectsOverlap(pieces[i], pieces[j])) {
+          overlapping.add(pieces[i].id);
+          overlapping.add(pieces[j].id);
+        }
+      }
+    }
+
+    pieces.forEach(p => {
+      const el = document.getElementById('furn-' + p.id);
+      const li = document.getElementById('li-' + p.id);
+      if (el) el.classList.toggle('overlap-el', overlapping.has(p.id));
+      if (li) li.classList.toggle('overlapping', overlapping.has(p.id));
+    });
+
+    overlapWarn.style.display = overlapping.size > 0 ? 'block' : 'none';
+  }
+
+  // ── RENDER LIST ──
+  let editingId = null;
+
+  function editPiece(id) {
+    editingId = (editingId === id) ? null : id;
+    renderList();
+  }
+
+  function saveEdit(id) {
+    const p = pieces.find(x => x.id === id);
+    if (!p) return;
+    const nameEl = document.getElementById('edit-name-' + id);
+    const wEl    = document.getElementById('edit-w-' + id);
+    const hEl    = document.getElementById('edit-h-' + id);
+    const newName = nameEl.value.trim() || p.name;
+    const newW    = parseFloat(wEl.value);
+    const newH    = parseFloat(hEl.value);
+    if (!newW || !newH) return;
+
+    p.name    = newName;
+    p.w       = newW;
+    p.h       = newH;
+    p.rotated = false; // reset rotation on edit
+    p.fits    = effW(p) <= roomW && effH(p) <= roomL;
+
+    clampPiece(p);
+    updateEl(p);
+    editingId = null;
+    renderList();
+    checkOverlaps();
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    renderList();
+  }
+
+  function renderList() {
+    listEl.innerHTML = '';
+    pieces.forEach(p => {
+      const c = COLORS[p.colorIdx];
+      const li = document.createElement('div');
+      li.className = 'furn-item' + (p.id === selectedId ? ' selected' : '');
+      li.id = 'li-' + p.id;
+      li.onclick = () => selectPiece(p.id);
+
+      const rotLabel = p.rotated ? ` (rotated)` : '';
+      const fitIcon  = (effW(p) <= roomW && effH(p) <= roomL) ? '✔' : '✘';
+      const isEditing = p.id === editingId;
+      li.className = 'furn-item' + (p.id === selectedId ? ' selected' : '') + (isEditing ? ' editing' : '');
+
+      li.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <div class="furn-swatch" style="background:${c.border}"></div>
+          <div class="furn-info">
+            <div class="furn-name">${fitIcon} ${p.name}</div>
+            <div class="furn-dims">${effW(p)}×${effH(p)} cm${rotLabel}</div>
+          </div>
+          <div class="furn-actions">
+            <button class="furn-btn" onclick="event.stopPropagation(); rotatePiece(${p.id})">↻</button>
+            <button class="furn-btn${isEditing ? ' del' : ''}" onclick="event.stopPropagation(); editPiece(${p.id})">${isEditing ? '✕' : '✎'}</button>
+            <button class="furn-btn del" onclick="event.stopPropagation(); removePiece(${p.id})">🗑</button>
+          </div>
+        </div>
+        <div class="furn-edit" onclick="event.stopPropagation()">
+          <input id="edit-name-${p.id}" value="${p.name}" placeholder="Name" style="grid-column:span 2">
+          <div class="furn-edit-row">
+            <input id="edit-w-${p.id}" type="number" value="${p.w}" placeholder="Width (cm)" min="1">
+            <input id="edit-h-${p.id}" type="number" value="${p.h}" placeholder="Length (cm)" min="1">
+          </div>
+          <div class="furn-edit-btns">
+            <button class="furn-edit-save" onclick="event.stopPropagation(); saveEdit(${p.id})">Save</button>
+            <button class="furn-edit-cancel" onclick="event.stopPropagation(); cancelEdit()">Cancel</button>
+          </div>
+        </div>
+      `;
+      listEl.appendChild(li);
+    });
+  }
+
   // ── RESET ──
   function resetAll() {
-    ["roomWidth","roomLength","furnitureName","furnWidth","furnLength"]
-      .forEach(id => document.getElementById(id).value = "");
- 
-    furnW = furnL = 0;
-    rotated = false;
- 
-    furnitureBox.style.width  = "0px";
-    furnitureBox.style.height = "0px";
-    furnitureBox.style.left   = "0px";
-    furnitureBox.style.top    = "0px";
-    furnitureLabel.textContent = "";
- 
-    roomBox.style.width  = CANVAS + "px";
-    roomBox.style.height = CANVAS + "px";
- 
-    widthLabel.textContent  = "— cm";
-    lengthLabel.textContent = "— cm";
- 
-    fitResult.textContent = "";
-    fitResult.className   = "";
+    pieces.forEach(p => removeEl(p.id));
+    pieces = [];
+    selectedId = null;
+    colorCursor = 0;
+    nextId = 1;
+    roomW = roomL = 0;
+
+    document.getElementById('roomWidth').value  = '';
+    document.getElementById('roomLength').value = '';
+    document.getElementById('furnName').value   = '';
+    document.getElementById('furnWidth').value  = '';
+    document.getElementById('furnLength').value = '';
+
+    roomBox.style.width  = CANVAS + 'px';
+    roomBox.style.height = CANVAS + 'px';
+    widthLabel.textContent  = '— cm';
+    lengthLabel.textContent = '— cm';
+    overlapWarn.style.display = 'none';
+
+    renderList();
   }
- 
-  // ── HELPERS ──
-  function showResult(fits, msg) {
-    fitResult.textContent = msg;
-    fitResult.className   = fits === true ? "fits" : fits === false ? "nope" : "";
-    if (fits === null) { fitResult.style.display = "block"; fitResult.style.border = "1px solid #555"; fitResult.style.color = "#888"; fitResult.style.background = "transparent"; }
-    else { fitResult.style.cssText = ""; }
-  }
- 
-  function clampFurniture() {
-    const maxX = roomBox.clientWidth  - furnitureBox.clientWidth;
-    const maxY = roomBox.clientHeight - furnitureBox.clientHeight;
-    let x = parseFloat(furnitureBox.style.left) || 0;
-    let y = parseFloat(furnitureBox.style.top)  || 0;
-    furnitureBox.style.left = Math.min(Math.max(x, 0), Math.max(maxX, 0)) + "px";
-    furnitureBox.style.top  = Math.min(Math.max(y, 0), Math.max(maxY, 0)) + "px";
-  }
- 
+
   // ── DRAG ──
-  let isDragging = false, dragOffX = 0, dragOffY = 0;
- 
-  furnitureBox.addEventListener("mousedown", e => {
-    isDragging = true;
-    dragOffX = e.clientX - furnitureBox.offsetLeft;
-    dragOffY = e.clientY - furnitureBox.offsetTop;
-    e.preventDefault();
-  });
- 
-  document.addEventListener("mousemove", e => {
-    if (!isDragging) return;
+  let dragging = null, dragOffX = 0, dragOffY = 0;
+
+  // Visual grid is 40px on a CANVAS of 520px.
+  // Grid size in cm = (40 / CANVAS) * max(roomW, roomL)
+  // We snap pixel positions to multiples of 40px.
+  const GRID_PX = 40;
+
+  function snapToGrid(val) {
+    return Math.round(val / GRID_PX) * GRID_PX;
+  }
+
+  function startDrag(e, p) {
+    dragging = p;
+    dragOffX = e.clientX - p.x;
+    dragOffY = e.clientY - p.y;
+  }
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const p = dragging;
+    const maxX = roomW * scale - effW(p) * scale;
+    const maxY = roomL * scale - effH(p) * scale;
+
     let nx = e.clientX - dragOffX;
     let ny = e.clientY - dragOffY;
-    const maxX = roomBox.clientWidth  - furnitureBox.clientWidth;
-    const maxY = roomBox.clientHeight - furnitureBox.clientHeight;
-    furnitureBox.style.left = Math.min(Math.max(nx, 0), Math.max(maxX, 0)) + "px";
-    furnitureBox.style.top  = Math.min(Math.max(ny, 0), Math.max(maxY, 0)) + "px";
+
+    // Hold Shift to snap to grid
+    if (e.shiftKey) {
+      nx = snapToGrid(nx);
+      ny = snapToGrid(ny);
+    }
+
+    p.x = Math.min(Math.max(nx, 0), Math.max(maxX, 0));
+    p.y = Math.min(Math.max(ny, 0), Math.max(maxY, 0));
+    updateEl(p);
+    checkOverlaps();
   });
- 
-  document.addEventListener("mouseup", () => { isDragging = false; });
- 
-  // Touch support
-  furnitureBox.addEventListener("touchstart", e => {
-    isDragging = true;
-    const t = e.touches[0];
-    dragOffX = t.clientX - furnitureBox.offsetLeft;
-    dragOffY = t.clientY - furnitureBox.offsetTop;
-  }, { passive: true });
- 
-  document.addEventListener("touchmove", e => {
-    if (!isDragging) return;
-    const t = e.touches[0];
-    let nx = t.clientX - dragOffX;
-    let ny = t.clientY - dragOffY;
-    const maxX = roomBox.clientWidth  - furnitureBox.clientWidth;
-    const maxY = roomBox.clientHeight - furnitureBox.clientHeight;
-    furnitureBox.style.left = Math.min(Math.max(nx, 0), Math.max(maxX, 0)) + "px";
-    furnitureBox.style.top  = Math.min(Math.max(ny, 0), Math.max(maxY, 0)) + "px";
-  }, { passive: true });
- 
-  document.addEventListener("touchend", () => { isDragging = false; });
+
+  document.addEventListener('mouseup', () => { dragging = null; });
+
+  // init room box size
+  roomBox.style.width  = CANVAS + 'px';
+  roomBox.style.height = CANVAS + 'px';
 </script>
 </body>
 </html>
